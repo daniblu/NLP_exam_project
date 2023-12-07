@@ -39,7 +39,7 @@ if __name__ == '__main__':
     X = data_agg.iloc[:, 3]
 
     # train test split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=55)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=50)
 
     # val test split
     X_val, X_test, y_val, y_test = train_test_split(X_test, y_test, test_size=0.5, random_state=55)
