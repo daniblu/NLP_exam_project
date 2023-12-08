@@ -69,11 +69,11 @@ if __name__ == '__main__':
     plt.savefig(plot_path / 'train_test_score_dist.png')
 
     # create Dataset objects
-    train_dict = {'label': y_train, 'story': X_train}
+    train_dict = {'label': y_train, 'text': X_train}
     ds_train = Dataset.from_dict(train_dict)
-    test_dict = {'label': y_test, 'story': X_test}
+    test_dict = {'label': y_test, 'text': X_test}
     ds_test = Dataset.from_dict(test_dict)
-    val_dict = {'label': y_val, 'story': X_val}
+    val_dict = {'label': y_val, 'text': X_val}
     ds_val = Dataset.from_dict(val_dict)
 
     # combine into dictionary
