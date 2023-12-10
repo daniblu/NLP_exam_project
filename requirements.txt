@@ -1,6 +1,9 @@
-ipykernel
-pandas
-datasets
-scikit-learn
-matplotlib
-seaborn
+datasets==2.15.0
+matplotlib==3.8.2
+numpy==1.22.3
+pandas==1.4.2
+scikit_learn==1.3.2
+seaborn==0.13.0
+torch==2.1.1
+transformers==4.35.2
+intel_extension_for_pytorch==2.0.100
