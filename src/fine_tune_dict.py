@@ -75,9 +75,9 @@ def compute_metrics(eval_pred):
     return res
 
 # define the model
-class FeedBackModel(nn.Module):
+class RegressionModel(nn.Module):
     def __init__(self, model_name):
-        super(FeedBackModel, self).__init__()
+        super(RegressionModel, self).__init__()
         self.config = AutoConfig.from_pretrained(model_name)
         self.config.hidden_dropout_prob = 0
         self.config.attention_probs_dropout_prob = 0
@@ -88,8 +88,9 @@ class FeedBackModel(nn.Module):
     def forward(self, input_ids, attention_mask):
         out = self.model(input_ids=input_ids, # out should be of type SequenceClassifierOutput
                         attention_mask=attention_mask, 
-                        output_hidden_states=False)
-        out = self.drop(out)
+                        output_hidden_states=True)
+        cls_token = out.hidden_states[-1][:, 0, :].to(CONFIG.get('device'))
+        out = self.drop(cls_token )
         outputs = self.fc(out) # outputs should be regression scores
         return SequenceClassifierOutput(logits=outputs)
 
@@ -166,7 +167,7 @@ if __name__ == '__main__':
     collate_fn = DataCollatorWithPadding(tokenizer=tokenizer)
 
     # init model
-    model = FeedBackModel(CONFIG['model_name'])
+    model = RegressionModel(CONFIG['model_name'])
     model.to(CONFIG['device'])
 
     # SET THE OPITMIZER AND THE SCHEDULER
