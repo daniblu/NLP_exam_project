@@ -56,7 +56,7 @@ def tokenize(examples):
     res = {
         'input_ids': tokens['input_ids'].to(CONFIG.get('device')).squeeze(),
         'attention_mask': tokens['attention_mask'].to(CONFIG.get('device')).squeeze(),
-        'labels': torch.tensor(labels.to(CONFIG.get('device')))
+        'labels': torch.tensor(labels)
     }
 
     return res
