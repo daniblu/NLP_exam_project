@@ -22,6 +22,25 @@ from transformers.modeling_outputs import SequenceClassifierOutput
 
 print("[INFO]: Defining custom classes and functions.")
 
+# configuration
+CONFIG = {
+    "model_name": "distilbert-base-uncased",
+    "device": 'cuda' if torch.cuda.is_available() else 'cpu',
+    #"dropout": random.uniform(0.01, 0.60),
+    "max_length": 512,
+    "train_batch_size": 8,
+    "valid_batch_size": 8, # 16 originally
+    "epochs": 3,
+    #"folds" : 3,
+    "max_grad_norm": 1000,
+    "weight_decay": 1e-6, # Btwn 0-0.1. "The higher the value, the less likely your model will overfit. However, if set too high, your model might not be powerful enough."
+    "learning_rate": 2e-5,
+    "loss_type": "rmse",
+    "n_accumulate" : 1,
+    "label_cols" : ['Coherence', 'Empathy', 'Surprise', 'Engagement', 'Complexity'], 
+    
+}
+
 # define the batch genetator
 class CustomIterator(torch.utils.data.Dataset):
     '''
@@ -78,16 +97,14 @@ class FeedBackModel(nn.Module):
         self.config = AutoConfig.from_pretrained(model_name)
         self.config.hidden_dropout_prob = 0
         self.config.attention_probs_dropout_prob = 0
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_name, problem_type = "regression", config=self.config)
+        self.model = AutoModelForSequenceClassification.from_pretrained(model_name, config=self.config)
         self.drop = nn.Dropout(p=0.2)
-        #self.pooler = MeanPooling() # what's the purpose of this?
         self.fc = nn.Linear(self.config.hidden_size, len(CONFIG['label_cols']))
         
     def forward(self, input_ids, attention_mask):
         out = self.model(input_ids=input_ids, # out should be of type SequenceClassifierOutput
                         attention_mask=attention_mask, 
                         output_hidden_states=False)
-        #out = self.pooler(out.last_hidden_state, attention_mask)
         out = self.drop(out)
         outputs = self.fc(out) # outputs should be regression scores
         return SequenceClassifierOutput(logits=outputs)
@@ -127,25 +144,6 @@ if __name__ == '__main__':
     data_path = Path(__file__).parents[1] / 'story_eval_dataset.pkl'
     models_path = Path(__file__).parents[1] / 'models'
 
-    # configuration
-    CONFIG = {
-        "model_name": "distilbert-base-uncased",
-        "device": 'cuda' if torch.cuda.is_available() else 'cpu',
-        #"dropout": random.uniform(0.01, 0.60),
-        "max_length": 512,
-        "train_batch_size": 8,
-        "valid_batch_size": 8, # 16 originally
-        "epochs": 3,
-        #"folds" : 3,
-        "max_grad_norm": 1000,
-        "weight_decay": 1e-6, # Btwn 0-0.1. "The higher the value, the less likely your model will overfit. However, if set too high, your model might not be powerful enough."
-        "learning_rate": 2e-5,
-        "loss_type": "rmse",
-        "n_accumulate" : 1,
-        "label_cols" : ['Coherence', 'Empathy', 'Surprise', 'Engagement', 'Complexity'], 
-        
-    }
-
     # define the training arguments
     training_args = TrainingArguments(
         output_dir=models_path,
@@ -156,6 +154,7 @@ if __name__ == '__main__':
         learning_rate=CONFIG['learning_rate'],
         weight_decay=CONFIG['weight_decay'],
         gradient_accumulation_steps=CONFIG['n_accumulate'],
+        use_cpu=True if CONFIG['device'] == 'cpu' else False, # not sure about this
         use_ipex=True if CONFIG['device'] == 'cpu' else False, # not sure about this
         bf16=True if CONFIG['device'] == 'cpu' else False, # not sure about this
         seed=SEED,
@@ -184,6 +183,7 @@ if __name__ == '__main__':
 
     # init model
     model = FeedBackModel(CONFIG['model_name'])
+    model.to(CONFIG['device'])
 
     # SET THE OPITMIZER AND THE SCHEDULER
     # no decay for bias and normalization layers
@@ -216,7 +216,6 @@ if __name__ == '__main__':
             eval_dataset=validation_dataset,
             data_collator=collate_fn,
             optimizers=(optimizer, scheduler),
-            no_cuda=True if CONFIG['device'] == 'cpu' else False,
             compute_metrics=compute_metrics)
     
     # train
@@ -227,5 +226,6 @@ if __name__ == '__main__':
 
     
     # TODO: what's a warmup scheduler and why is recommended for fine-tuning?
+    # TODO: Padding both in custom iterator AND custom trainer?
     # TODO: plots?
     # TODO: How to evaluate?
