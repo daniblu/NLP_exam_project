@@ -8,3 +8,4 @@ torch==2.1.1
 transformers==4.35.2
 intel_extension_for_pytorch==2.1.0
 accelerate==0.25.0
+ipykernel==6.27.1
