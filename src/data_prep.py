@@ -17,7 +17,7 @@ if __name__ == '__main__':
     # paths
     data_path = Path(__file__).parents[1] / 'hanna_stories_annotations.csv'
     plot_path = Path(__file__).parents[1] / 'plots'
-    output_path = Path(__file__).parents[1] / 'story_eval_dataset_dict.pkl'
+    output_path = Path(__file__).parents[1] / 'story_eval_dataset.pkl'
 
     # load data
     data = pd.read_csv(data_path)
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     y = data_agg.iloc[:, 5:11].agg(func=np.array, axis=1)
 
     # isolate stories
-    X = data_agg.iloc[:, 3]
+    X = data_agg.iloc[:, [3,4]]
 
     # train test split
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=50)
@@ -69,11 +69,11 @@ if __name__ == '__main__':
     plt.savefig(plot_path / 'train_test_score_dist.png')
 
     # create Dataset objects
-    train_dict = {'label': y_train, 'text': X_train}
+    train_dict = {'label': y_train, 'text': X_train['Story'], 'model': X_train['Model']}
     ds_train = Dataset.from_dict(train_dict)
-    test_dict = {'label': y_test, 'text': X_test}
+    test_dict = {'label': y_test, 'text': X_test['Story'], 'model': X_test['Model']}
     ds_test = Dataset.from_dict(test_dict)
-    val_dict = {'label': y_val, 'text': X_val}
+    val_dict = {'label': y_val, 'text': X_val['Story'], 'model': X_val['Model']}
     ds_val = Dataset.from_dict(val_dict)
 
     # combine into dictionary
