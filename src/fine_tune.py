@@ -34,12 +34,12 @@ CONFIG = {
     "model_name": "distilbert-base-uncased",
     "device": 'cuda' if torch.cuda.is_available() else 'cpu',
     "max_length": 512,
-    "train_batch_size": 8, # dataset[train] is 739 long. That gives 93 batches/steps (last batch only has 3 data entries)
+    "train_batch_size": 32, # dataset[train] is 739 long. That gives 93 batches/steps (last batch only has 3 data entries)
     "valid_batch_size": 158,
-    "epochs": 15,
+    "epochs": 1,
     "max_grad_norm": 1000,
     "weight_decay": 1e-6, # Btwn 0-0.1. "The higher the value, the less likely your model will overfit. However, if set too high, your model might not be powerful enough."
-    "learning_rate": 2e-5,
+    "learning_rate": 3e-5, # the BERT paper used 5e-5, 4e-5, 3e-5, and 2e-5 for fine-tuning
     "loss_type": "rmse",
     "n_accumulate" : 1,
     "label_cols" : ['Coherence', 'Empathy', 'Surprise', 'Engagement', 'Complexity'],
@@ -82,12 +82,14 @@ def compute_metrics(eval_pred):
     res["MCRMSE"] = np.mean(colwise_rmse)
     return res
 
-class RegressionModel(PreTrainedModel):
+class RegressionModel(nn.Module):
     '''
     A custom model that takes a pretrained model and adds a dropout layer and a linear layer on top.
     '''
+
     def __init__(self, model_name):
-        super(RegressionModel, self).__init__(config=AutoConfig.from_pretrained(model_name))
+        super(RegressionModel, self).__init__()
+        self.config = AutoConfig.from_pretrained(model_name)
         self.config.hidden_dropout_prob = 0
         self.config.attention_probs_dropout_prob = 0
         self.model = AutoModelForSequenceClassification.from_pretrained(model_name, config=self.config)
@@ -132,7 +134,7 @@ if __name__ == '__main__':
 
     # paths
     data_path = Path(__file__).parents[1] / 'story_eval_dataset.pkl'
-    models_path = Path(__file__).parents[1] / 'models' / 'run1'
+    models_path = Path(__file__).parents[1] / 'models' / 'run32_test'
 
     # check if models_path exists, if not create it
     if not models_path.exists():
@@ -238,7 +240,8 @@ if __name__ == '__main__':
 
     # save model
     print("[INFO]: Saving model.")
-    trainer.save_model(models_path / 'fine_tuned_model')
+    #trainer.save_model(models_path / 'fine_tuned_model')
+    torch.save(model.state_dict(), models_path / 'model_state')
 
     # save loss history
     log_history = parse_log_history(trainer.state.log_history)
