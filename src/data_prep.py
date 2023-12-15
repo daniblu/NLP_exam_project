@@ -1,6 +1,7 @@
 '''
 This script loads the HANNA dataset and prepares it for the model. 
-This involves averaging human annotations, train-test splitting, and organsing the data in a Dataset object. 
+This involves averaging human annotations, train-test splitting, and organsing the data in a Dataset object.
+Some plots are also created to inspect the splits.
 '''
 
 from pathlib import Path
@@ -44,9 +45,33 @@ if __name__ == '__main__':
     # val test split
     X_val, X_test, y_val, y_test = train_test_split(X_test, y_test, test_size=0.5, random_state=55)
 
-    # plot distribution of scores in train and validation sets for each metric
+    # count models in test set
+    print('Count of each model in test set:\n', X_test['Model'].value_counts())
+
+    # plot distribution of scores for each model in test set
     metrics = ['Coherence', 'Empathy', 'Surprise', 'Engagement', 'Complexity']
 
+    coherence_score = [score[0] for score in y_test]
+    empathy_score = [score[1] for score in y_test]
+    surprise_score = [score[2] for score in y_test]
+    engagement_score = [score[3] for score in y_test]
+    complexity_score = [score[4] for score in y_test]
+    score_list = [coherence_score, empathy_score, surprise_score, engagement_score, complexity_score]
+
+    df = pd.DataFrame({'Model': X_test['Model'].tolist() * 5, 'Scores': np.concatenate(score_list)})
+
+    ags_models = ['Human', 'BertGeneration', 'CTRL', 'RoBERTa', 'XLNet', 'GPT', 'GPT-2', 'GPT-2 (tag)', 'HINT', 'Fusion', 'TD-VAE']
+
+    fig, ax = plt.subplots(figsize=(12, 4))
+    sns.boxplot(data=df, x='Model', y='Scores', 
+                fill=False, whis=(0,100), color='black', linewidth=1,
+                order=ags_models)
+    ax.set_xlabel('')
+    ax.set_ylabel('Score')
+    ax.yaxis.grid(True)
+    fig.savefig(plot_path / 'scores_of_models_in_test.png')
+
+    # plot distribution of scores in train and validation sets for each metric
     fig, ax = plt.subplots(5, 2, figsize=(8, 20))
     for i, metric in enumerate(metrics):
         sns.histplot([score[i] for score in y_train], bins=np.arange(0, 5+(1/3), 1/3), ax=ax[i, 0]).set(xlabel=None)
