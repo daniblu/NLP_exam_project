@@ -2,7 +2,6 @@
 Code slightly adapted from https://towardsai.net/p/l/transformers-for-multi-regression-part2
 '''
 
-print("[INFO]: Importing libraries.")
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -36,8 +35,6 @@ def input_parse():
     args = parser.parse_args()
 
     return(args)
-
-print("[INFO]: Defining custom classes and functions.")
 
 class RegressionModel(nn.Module):
     '''
