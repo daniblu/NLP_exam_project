@@ -1,4 +1,3 @@
-print('[INFO]: Importing libraries.')
 from pathlib import Path
 import argparse
 import pandas as pd
@@ -97,6 +96,8 @@ def main(model_dir):
         axs[j].yaxis.grid(True)
         axs[j].set_title(f'{metric_error.split()[0]}', y=1.0, pad=-14)
     fig.savefig(plot_path / 'abs_error_per_model_{model_dir}.png', bbox_inches='tight')
+
+    print(f'[INFO]: Finished. Evaluation plots saved for {model_dir}')
 
 if __name__ == '__main__':
     args = input_parse()
