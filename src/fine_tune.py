@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import math
 import pickle
+import argparse
 
 import torch
 import torch.nn as nn
@@ -23,86 +24,43 @@ from transformers import (
     Trainer, TrainingArguments
 )
 
-from transformers.modeling_utils import PreTrainedModel
 from transformers.modeling_outputs import SequenceClassifierOutput
 from transformers.modelcard import parse_log_history
 
+def input_parse():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--batch_size", "-bs", type=int, required=True, help="training batch size")
+    parser.add_argument("--learning_rate", "-lr", type=float, default=2e-5, help="max learning rate (scientific notation) during schedule, default=2e-5")
+    parser.add_argument("--epochs", "-e", type=int, default=15, help="number of epochs, default=15")
+    parser.add_argument("--seed", "-s",type=int, default=50, help="random state for model training, default=50")
+    args = parser.parse_args()
+
+    return(args)
+
 print("[INFO]: Defining custom classes and functions.")
-
-# configuration
-CONFIG = {
-    "model_name": "distilbert-base-uncased",
-    "device": 'cuda' if torch.cuda.is_available() else 'cpu',
-    "max_length": 512,
-    "train_batch_size": 32, # dataset[train] is 739 long. That gives 93 batches/steps (last batch only has 3 data entries)
-    "valid_batch_size": 158,
-    "epochs": 1,
-    "max_grad_norm": 1000,
-    "weight_decay": 1e-6, # Btwn 0-0.1. "The higher the value, the less likely your model will overfit. However, if set too high, your model might not be powerful enough."
-    "learning_rate": 3e-5, # the BERT paper used 5e-5, 4e-5, 3e-5, and 2e-5 for fine-tuning
-    "loss_type": "rmse",
-    "n_accumulate" : 1,
-    "label_cols" : ['Coherence', 'Empathy', 'Surprise', 'Engagement', 'Complexity'],
-    "early_stopping_patience": 2,
-    "early_stopping_threshold": 0.001,
-    "seed": 50 
-    
-}
-
-def tokenize(examples):
-    '''
-    A function to be used with the map method of the dataset class. 
-    Tokenizes the text and returns a dictionary of tensors.
-    '''
-    labels = examples['label']
-    tokens = tokenizer(examples['text'], 
-                       padding='max_length', 
-                       truncation=True, 
-                       max_length=CONFIG['max_length'], 
-                       return_tensors='pt',
-                       return_attention_mask=True)
-    res = {
-        'input_ids': tokens['input_ids'].to(CONFIG.get('device')).squeeze(),
-        'attention_mask': tokens['attention_mask'].to(CONFIG.get('device')).squeeze(),
-        'labels': torch.tensor(labels)
-    }
-
-    return res
-
-def compute_metrics(eval_pred):
-    '''
-    A custom function that allows calculating the RMSE of each of the six metrics separately.
-    '''
-    predictions, labels = eval_pred
-    colwise_rmse = np.sqrt(np.mean((labels - predictions) ** 2, axis=0))
-    res = {
-        f"{analytic.upper()}_RMSE" : colwise_rmse[i]
-        for i, analytic in enumerate(CONFIG["label_cols"])
-    }
-    res["MCRMSE"] = np.mean(colwise_rmse)
-    return res
 
 class RegressionModel(nn.Module):
     '''
     A custom model that takes a pretrained model and adds a dropout layer and a linear layer on top.
     '''
 
-    def __init__(self, model_name):
+    def __init__(self, model_name, label_cols, device):
         super(RegressionModel, self).__init__()
+        self.device = device
         self.config = AutoConfig.from_pretrained(model_name)
         self.config.hidden_dropout_prob = 0
         self.config.attention_probs_dropout_prob = 0
         self.model = AutoModelForSequenceClassification.from_pretrained(model_name, config=self.config)
         self.drop = nn.Dropout(p=0.2)
-        self.fc = nn.Linear(self.config.hidden_size, len(CONFIG['label_cols']))
+        self.fc = nn.Linear(self.config.hidden_size, len(label_cols))
         
     def forward(self, input_ids, attention_mask):
         out = self.model(input_ids=input_ids, # out should be of type SequenceClassifierOutput
                         attention_mask=attention_mask, 
                         output_hidden_states=True)
-        cls_token = out.hidden_states[-1][:, 0, :].to(CONFIG.get('device'))
+        cls_token = out.hidden_states[-1][:, 0, :].to(self.device)
         out = self.drop(cls_token )
-        outputs = self.fc(out) # outputs should be regression scores
+        outputs = self.fc(out)
         return SequenceClassifierOutput(logits=outputs)
 
 class RMSELoss(nn.Module):
@@ -127,20 +85,71 @@ class CustomTrainer(Trainer):
         loss_func = RMSELoss()
         loss = loss_func(outputs.logits.float(), inputs['labels'].float()) # predictions, targets
         return (loss, outputs) if return_outputs else loss
+    
+def compute_metrics(eval_pred):
+    '''
+    A custom function that allows calculating the RMSE of each of the six metrics separately.
+    '''
+    predictions, labels = eval_pred
+    colwise_rmse = np.sqrt(np.mean((labels - predictions) ** 2, axis=0))
+    res = {
+        f"{analytic.upper()}_RMSE" : colwise_rmse[i]
+        for i, analytic in enumerate(['Coherence', 'Empathy', 'Surprise', 'Engagement', 'Complexity'])
+    }
+    res["MCRMSE"] = np.mean(colwise_rmse)
+    return res
 
+def main(batch_size, learning_rate, epochs, seed):
 
-
-if __name__ == '__main__':
+    # configuration
+    CONFIG = {
+        "model_name": "distilbert-base-uncased",
+        "device": 'cuda' if torch.cuda.is_available() else 'cpu',
+        "max_length": 512,
+        "train_batch_size": batch_size,
+        "valid_batch_size": 158,
+        "epochs": epochs,
+        "max_grad_norm": 1000,
+        "weight_decay": 1e-6, # Btwn 0-0.1. "The higher the value, the less likely your model will overfit. However, if set too high, your model might not be powerful enough."
+        "learning_rate": learning_rate, # the BERT paper used 5e-5, 4e-5, 3e-5, and 2e-5 for fine-tuning
+        "loss_type": "rmse",
+        "n_accumulate" : 1,
+        "label_cols" : ['Coherence', 'Empathy', 'Surprise', 'Engagement', 'Complexity'],
+        "early_stopping_patience": 2,
+        "early_stopping_threshold": 0.001,
+        "seed": seed   
+    }
 
     # paths
     data_path = Path(__file__).parents[1] / 'story_eval_dataset.pkl'
-    models_path = Path(__file__).parents[1] / 'models' / 'run32_test'
+    models_path = Path(__file__).parents[1] / 'models' / f'bs{batch_size}_lr{learning_rate}_e{epochs}'
 
     # check if models_path exists, if not create it
     if not models_path.exists():
         models_path.mkdir(parents=True, exist_ok=True)
 
     # tokenize data
+
+    def tokenize(examples): # must be defined within main() in order for CONFIG to be recognized and because only examples may be given as input
+        '''
+        A function to be used with the map method of the dataset class. 
+        Tokenizes the text and returns a dictionary of tensors.
+        '''
+        labels = examples['label']
+        tokens = tokenizer(examples['text'], 
+                        padding='max_length', 
+                        truncation=True, 
+                        max_length=CONFIG['max_length'], 
+                        return_tensors='pt',
+                        return_attention_mask=True)
+        res = {
+            'input_ids': tokens['input_ids'].to(CONFIG['device']).squeeze(),
+            'attention_mask': tokens['attention_mask'].to(CONFIG['device']).squeeze(),
+            'labels': torch.tensor(labels)
+        }
+
+        return res
+
     with open(data_path, 'rb') as f:
         dataset = pickle.load(f)
 
@@ -192,7 +201,7 @@ if __name__ == '__main__':
                                        early_stopping_threshold = CONFIG['early_stopping_threshold'])
 
     # init model
-    model = RegressionModel(model_name=CONFIG['model_name'])
+    model = RegressionModel(model_name=CONFIG['model_name'], label_cols=CONFIG['label_cols'], device=CONFIG['device'])
     model.to(CONFIG['device'])
 
     # count number of trainable params (total and in head)
@@ -255,5 +264,11 @@ if __name__ == '__main__':
 
     print("[INFO]: Finished.")
 
-    # TODO: why is warmup schedule recommended for fine-tuning?
-    # TODO: Padding both in custom iterator AND custom trainer?
+
+if __name__ == '__main__':
+    args = input_parse()
+    main(batch_size=args.batch_size, learning_rate=args.learning_rate, epochs=args.epochs, seed=args.seed)
+    
+
+# TODO: why is warmup schedule recommended for fine-tuning?
+# TODO: Padding both in custom iterator AND custom trainer?
