@@ -68,7 +68,7 @@ def main(model_dir):
     ax.set_xticklabels(metrics)
     ax.yaxis.grid(True)
     ax.set_ylabel('Absolute error')
-    fig.savefig(plot_path / 'abs_error_per_metric_{model_dir}.png', bbox_inches='tight')
+    fig.savefig(plot_path / f'abs_error_per_metric_{model_dir}.png', bbox_inches='tight')
 
     # find max absolute error
     lists = df['Absolute Error'].apply(lambda x: x.tolist())
@@ -95,7 +95,7 @@ def main(model_dir):
         axs[j].set_ylim(0, max_abs_error+0.1)
         axs[j].yaxis.grid(True)
         axs[j].set_title(f'{metric_error.split()[0]}', y=1.0, pad=-14)
-    fig.savefig(plot_path / 'abs_error_per_model_{model_dir}.png', bbox_inches='tight')
+    fig.savefig(plot_path / f'abs_error_per_model_{model_dir}.png', bbox_inches='tight')
 
     print(f'[INFO]: Finished. Evaluation plots saved for {model_dir}')
 
