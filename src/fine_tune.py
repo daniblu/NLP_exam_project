@@ -268,7 +268,3 @@ def main(batch_size, learning_rate, epochs, seed):
 if __name__ == '__main__':
     args = input_parse()
     main(batch_size=args.batch_size, learning_rate=args.learning_rate, epochs=args.epochs, seed=args.seed)
-    
-
-# TODO: why is warmup schedule recommended for fine-tuning?
-# TODO: Padding both in custom iterator AND custom trainer?
