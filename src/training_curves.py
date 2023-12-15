@@ -55,6 +55,7 @@ def main(model_dir):
     ax.set_title(title_text, loc='right', y=1.0, pad=-14)
     ax.legend(loc=(0.68, 0.78))
     ax.set_xlabel('Epoch')
+    ax.set_xticks(np.arange(1, n_epochs+1))
     ax.set_ylabel('RMSE loss')
     plt.savefig(plot_path / f'loss_{model_dir}.png')
 
