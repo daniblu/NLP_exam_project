@@ -45,7 +45,7 @@ def main(model_dir):
     }
 
     # init model
-    model = RegressionModel(model_name=CONFIG['model_name']) #.to('cpu')?
+    model = RegressionModel(model_name=CONFIG['model_name'], label_cols=CONFIG['label_cols'], device=CONFIG['device']) #.to('cpu')?
 
     # load fine-tuned weights into model
     model.load_state_dict(torch.load(model_path, map_location=torch.device(CONFIG['device'])))
