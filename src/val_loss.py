@@ -16,6 +16,9 @@ for folder in models_folder.iterdir():
             val_loss = val_loss[-1] if len(val_loss) > 0 else val_loss
             val_loss_dict[folder.name] = val_loss
 
+# sort val_loss_dict by value in ascending order
+val_loss_dict = dict(sorted(val_loss_dict.items(), key=lambda item: item[1]))
+
 # save val_loss_dict as txt file
 with open(output_folder / 'val_loss_table.txt', 'w') as f:
     for key, val in val_loss_dict.items():
