@@ -45,8 +45,11 @@ if __name__ == '__main__':
     # val test split
     X_val, X_test, y_val, y_test = train_test_split(X_test, y_test, test_size=0.5, random_state=55)
 
-    # count models in test set
-    print('Count of each model in test set:\n', X_test['Model'].value_counts())
+    # count models in val set and test set and merge series
+    X_val_counts = X_val['Model'].value_counts()
+    X_test_counts = X_test['Model'].value_counts()
+    df = pd.concat([X_val_counts, X_test_counts], axis=1, keys=['val', 'test'])
+    print('Count of each model in val and test set:\n', df)
 
     # plot distribution of scores for each model in test set
     metrics = ['Coherence', 'Empathy', 'Surprise', 'Engagement', 'Complexity']
@@ -107,3 +110,5 @@ if __name__ == '__main__':
     # save dataset as pkl file
     with open(output_path, 'wb') as f:
         pickle.dump(dataset, f)
+    
+    print(f'[INFO]: Finished. Dataset saved in {output_path.name}')
