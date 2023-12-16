@@ -165,3 +165,10 @@ cython_debug/
 
 # models
 models/*/
+
+# training and evaluation plots
+plots/loss*.png
+plots/abs*.png
+
+# test prediction csv-files
+test_*
