@@ -84,8 +84,10 @@ if __name__ == '__main__':
         ax[i, 0].set_ylabel(metric, rotation=0, fontsize=20)
         ax[i, 0].yaxis.set_label_coords(-0.37, 0.5)
         ax[i, 1].set_xlim(1, 5)
+        ax[i, 1].set_ylim(0, 43)
         ax[i, 1].set_ylabel('')
         ax[i, 2].set_xlim(1, 5)
+        ax[i, 2].set_ylim(0, 43)
         ax[i, 2].set_ylabel('')
 
     for ax, col in zip(ax[0], ['Train', 'Validation', 'Test']):
