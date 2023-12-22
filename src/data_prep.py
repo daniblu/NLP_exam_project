@@ -75,26 +75,24 @@ if __name__ == '__main__':
     fig.savefig(plot_path / 'scores_of_models_in_test.png')
 
     # plot distribution of scores in train and validation sets for each metric
-    fig, ax = plt.subplots(5, 2, figsize=(8, 20))
+    fig, ax = plt.subplots(5, 3, figsize=(13, 18))
     for i, metric in enumerate(metrics):
         sns.histplot([score[i] for score in y_train], bins=np.arange(0, 5+(1/3), 1/3), ax=ax[i, 0]).set(xlabel=None)
         sns.histplot([score[i] for score in y_val], bins=np.arange(0, 5+(1/3), 1/3), ax=ax[i, 1]).set(xlabel=None)
-        ax[i, 0].set_title(f'Train_{metric}')
+        sns.histplot([score[i] for score in y_test], bins=np.arange(0, 5+(1/3), 1/3), ax=ax[i, 2]).set(xlabel=None)
         ax[i, 0].set_xlim(1, 5)
-        ax[i, 1].set_title(f'Validation_{metric}')
+        ax[i, 0].set_ylabel(metric, rotation=0, fontsize=20)
+        ax[i, 0].yaxis.set_label_coords(-0.37, 0.5)
         ax[i, 1].set_xlim(1, 5)
-    plt.savefig(plot_path / 'train_val_score_dist.png')
+        ax[i, 1].set_ylabel('')
+        ax[i, 2].set_xlim(1, 5)
+        ax[i, 2].set_ylabel('')
 
-    # plot distribution of scores in train and test sets for each metric
-    fig, ax = plt.subplots(5, 2, figsize=(8, 20))
-    for i, metric in enumerate(metrics):
-        sns.histplot([score[i] for score in y_train], bins=np.arange(0, 5+(1/3), 1/3), ax=ax[i, 0]).set(xlabel=None)
-        sns.histplot([score[i] for score in y_test], bins=np.arange(0, 5+(1/3), 1/3), ax=ax[i, 1]).set(xlabel=None)
-        ax[i, 0].set_title(f'Train_{metric}')
-        ax[i, 0].set_xlim(1, 5)
-        ax[i, 1].set_title(f'Test_{metric}')
-        ax[i, 1].set_xlim(1, 5)
-    plt.savefig(plot_path / 'train_test_score_dist.png')
+    for ax, col in zip(ax[0], ['Train', 'Validation', 'Test']):
+        ax.set_title(col, fontsize=20)
+
+    fig.tight_layout()
+    plt.savefig(plot_path / 'splits_score_dist.png')
 
     # create Dataset objects
     train_dict = {'label': y_train, 'text': X_train['Story'], 'model': X_train['Model']}
