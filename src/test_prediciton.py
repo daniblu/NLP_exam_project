@@ -24,6 +24,7 @@ def main(model_dir):
     # paths
     data_path = Path(__file__).parents[1] / 'story_eval_dataset.pkl'
     model_path = Path(__file__).parents[1] / 'models' / model_dir / 'model_state'
+    output_path = Path(__file__).parents[1] / 'test predictions'
 
     # load data
     with open(data_path, 'rb') as f:
@@ -77,7 +78,7 @@ def main(model_dir):
     })
 
     # save predictions
-    df.to_csv(f'test_predictions_{model_dir}.csv', index=False)
+    df.to_csv(output_path / f'test_predictions_{model_dir}.csv', index=False)
 
     print('[INFO]: Finished. Test predictions saved.')
 

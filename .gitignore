@@ -171,4 +171,4 @@ plots/loss*.png
 plots/abs*.png
 
 # test prediction csv-files
-test_*
+test predictions/test_*

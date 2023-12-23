@@ -22,7 +22,7 @@ def str_to_array(s):
 def main(model_dir):
 
     # paths
-    data_path = Path(__file__).parents[1] / f'test_predictions_{model_dir}.csv'
+    data_path = Path(__file__).parents[1] / 'test predictions' / f'test_predictions_{model_dir}.csv'
     plot_path = Path(__file__).parents[1] / 'plots'
 
     # load test_predictions.csv
