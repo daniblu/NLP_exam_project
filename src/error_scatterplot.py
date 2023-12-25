@@ -90,7 +90,7 @@ def main(model_dir):
 
     axes[0].set_xlabel('')
     axes[1].set_xlabel('')
-    axes[2].set_xlabel('True label', fontsize=18)
+    axes[2].set_xlabel('True score', fontsize=18)
     axes[2].xaxis.set_label_coords(0.4, -0.22)
     axes[3].set_xlabel('')
     axes[4].set_xlabel('')
@@ -106,4 +106,4 @@ def main(model_dir):
 if __name__ == '__main__':
     args = input_parse()
     main(args.model_dir)
-    print('[INFO]: Finished. Error scatterplot saved.]')
+    print('[INFO]: Finished. Error scatterplot saved.')
