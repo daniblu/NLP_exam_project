@@ -13,6 +13,9 @@ def input_parse():
     return(args)
 
 def str_to_array(s):
+    '''
+    Convert string representation of list to numpy array.
+    '''
     s = s.replace('[', '')
     s = s.replace(']', '')
     s = s.replace(' ', '')
