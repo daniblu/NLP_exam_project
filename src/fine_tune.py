@@ -193,7 +193,7 @@ def main(batch_size, learning_rate, epochs, seed):
 
     # define early stopping criteria
     # note, if early stop occurs, the model will not be saved in the ckeckpoint (https://discuss.huggingface.co/t/what-is-the-purpose-of-save-pretrained/9167)
-    # thus trainer.save_model() is necessary
+    # thus saving the trainer object is necessary
     early_stop = EarlyStoppingCallback(early_stopping_patience = CONFIG['early_stopping_patience'], 
                                        early_stopping_threshold = CONFIG['early_stopping_threshold'])
 
@@ -246,7 +246,6 @@ def main(batch_size, learning_rate, epochs, seed):
 
     # save model
     print("[INFO]: Saving model.")
-    #trainer.save_model(models_path / 'fine_tuned_model')
     torch.save(model.state_dict(), models_path / 'model_state')
 
     # save loss history
