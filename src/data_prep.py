@@ -13,6 +13,21 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
 
+def unravel_scores(X, y):
+    '''
+    Unravels scores from a Dataset object and returns a dataframe with the model name and scores for each metric.
+    '''
+    coherence_score = [score[0] for score in y]
+    empathy_score = [score[1] for score in y]
+    surprise_score = [score[2] for score in y]
+    engagement_score = [score[3] for score in y]
+    complexity_score = [score[4] for score in y]
+    score_list = [coherence_score, empathy_score, surprise_score, engagement_score, complexity_score]
+
+    df = pd.DataFrame({'Model': X['Model'].tolist() * 5, 'Scores': np.concatenate(score_list)})
+    
+    return df
+
 if __name__ == '__main__':
 
     # paths
@@ -46,35 +61,35 @@ if __name__ == '__main__':
     X_val, X_test, y_val, y_test = train_test_split(X_test, y_test, test_size=0.5, random_state=55)
 
     # count models in val set and test set and merge series
+    X_train_counts = X_train['Model'].value_counts()
     X_val_counts = X_val['Model'].value_counts()
     X_test_counts = X_test['Model'].value_counts()
-    df = pd.concat([X_val_counts, X_test_counts], axis=1, keys=['val', 'test'])
+    df = pd.concat([X_train_counts, X_val_counts, X_test_counts], axis=1, keys=['train', 'val', 'test'])
     print('Count of each model in val and test set:\n', df)
 
     # plot distribution of scores for each model in test set
     metrics = ['Coherence', 'Empathy', 'Surprise', 'Engagement', 'Complexity']
-
-    coherence_score = [score[0] for score in y_test]
-    empathy_score = [score[1] for score in y_test]
-    surprise_score = [score[2] for score in y_test]
-    engagement_score = [score[3] for score in y_test]
-    complexity_score = [score[4] for score in y_test]
-    score_list = [coherence_score, empathy_score, surprise_score, engagement_score, complexity_score]
-
-    df = pd.DataFrame({'Model': X_test['Model'].tolist() * 5, 'Scores': np.concatenate(score_list)})
-
     ags_models = ['Human', 'BertGeneration', 'CTRL', 'RoBERTa', 'XLNet', 'GPT', 'GPT-2', 'GPT-2 (tag)', 'HINT', 'Fusion', 'TD-VAE']
 
-    fig, ax = plt.subplots(figsize=(12, 4))
-    sns.boxplot(data=df, x='Model', y='Scores', 
-                fill=False, whis=(0,100), color='black', linewidth=1,
-                order=ags_models)
-    ax.set_xlabel('')
-    ax.set_ylabel('Score')
-    ax.yaxis.grid(True)
-    fig.savefig(plot_path / 'scores_of_models_in_test.png')
+    df_train = unravel_scores(X_train, y_train)
+    df_val = unravel_scores(X_val, y_val)
+    df_test = unravel_scores(X_test, y_test)
+    df_list = [df_train, df_val, df_test]
+    set_list = ['Train', 'Validation', 'Test']
 
-    # plot distribution of scores in train and validation sets for each metric
+    fig, axes = plt.subplots(3, 1, figsize=(12, 13))
+    for i, ax in enumerate(axes):
+        sns.boxplot(data=df_list[i], x='Model', y='Scores', 
+                    fill=False, whis=(0,100), color='black', linewidth=1,
+                    order=ags_models, 
+                    ax=ax)
+        ax.set_xlabel('')
+        ax.set_ylabel('Score')
+        ax.yaxis.grid(True)
+        ax.set_title(set_list[i], fontsize=17)
+    fig.savefig(plot_path / 'scores_per_model_in_all_splits.png')
+
+    # plot distribution of scores in dataset splits for each metric
     fig, ax = plt.subplots(5, 3, figsize=(13, 18))
     for i, metric in enumerate(metrics):
         sns.histplot([score[i] for score in y_train], bins=np.arange(0, 5+(1/3), 1/3), ax=ax[i, 0]).set(xlabel=None)
