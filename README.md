@@ -73,9 +73,9 @@ __Other scripts__
 ├── LICENSE
 ├── README.md
 ├── activate.sh
-├── hanna_stories_annotations.csv   <-- The HANNA dataset
+├── hanna_stories_annotations.csv   <-- the HANNA dataset
 ├── loss_table.txt
 ├── requirements.txt
 ├── setup_env.sh
-└── story_eval_dataset.pkl          <-- Splitted HANNA, prepared for fine_tune.py
+└── story_eval_dataset.pkl          <-- splitted HANNA, prepared for fine_tune.py
 ```
