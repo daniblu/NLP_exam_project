@@ -164,11 +164,11 @@ cython_debug/
 *win.sh
 
 # models
-models/*/
+#models/*/
 
 # training and evaluation plots
-plots/loss*.png
-plots/abs*.png
+#plots/loss*.png
+#plots/abs*.png
 
 # test prediction csv-files
-test predictions/test_*
+#test predictions/test_*
