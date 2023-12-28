@@ -50,7 +50,7 @@ The script produces __abs_error_per_metric_{MODEL NAME}.png__ and __abs_error_pe
 
 __Other scripts__
 - ``training_curves``: plot training and validation loss for a model of choice. Produces __loss_{MODEL NAME}.png__.
-- ``error_scatterplot.py``: plot a scatterplot of stories with prediction error versus true score for each criterium. Produces __error_vs_label_{MODEL NAME}.png__.
+- ``error_scatterplot.py``: plot a scatterplot of stories with prediction error versus true score for each criterium. Produces __error\_vs\_label\_{MODEL NAME}.png__.
 - ``loss_list.py``: Create list of training and validation loss of all models in the __models__ folder. Models are listed in ascening order with respect to validation loss. Produces __loss_table.txt__. 
 
 
