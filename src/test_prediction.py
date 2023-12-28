@@ -24,7 +24,7 @@ def main(model_dir):
     # paths
     data_path = Path(__file__).parents[1] / 'story_eval_dataset.pkl'
     model_path = Path(__file__).parents[1] / 'models' / model_dir / 'model_state'
-    output_path = Path(__file__).parents[1] / 'test predictions'
+    output_path = Path(__file__).parents[1] / 'test_predictions'
 
     # load data
     with open(data_path, 'rb') as f:
