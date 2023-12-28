@@ -164,7 +164,7 @@ cython_debug/
 *win.sh
 
 # models
-#models/*/
+models/*/
 
 # training and evaluation plots
 #plots/loss*.png
